@@ -1,0 +1,196 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  aws-api-gateway-to-s3-static-site-playground.  API Gateway service integration to S3 for hosting static sites via api gateway.
+Parameters:
+  Stage:
+    Type: String
+    Default: dev
+
+Resources:
+  StaticSiteBucket:
+    Type: "AWS::S3::Bucket"
+    Properties:
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: ["*"]
+            AllowedMethods: [GET, PUT]
+            AllowedOrigins: ["*"]
+            ExposedHeaders: [Date]
+            Id: CORSRules
+            MaxAge: 3600
+
+  ApiGatewayRestApi:
+    Type: "AWS::Serverless::Api"
+    Properties:
+      Name: !Sub "${AWS::StackName}-rest-api"
+      StageName: !Sub "${Stage}"
+      DefinitionBody:
+        openapi: "3.0.1"
+        info:
+          title: "apig-s3-svc-int-static-site-01"
+          version: "2021-05-20T21:37:54Z"
+        servers:
+          - url: "https://ou6nz4j328.execute-api.us-east-1.amazonaws.com/{basePath}"
+            variables:
+              basePath:
+                default: "/dev"
+        paths:
+          /{item+}:
+            get:
+              parameters:
+                - name: "Content-Type"
+                  in: "header"
+                  schema:
+                    type: "string"
+                - name: "item"
+                  in: "path"
+                  required: true
+                  schema:
+                    type: "string"
+                - name: "Content-Disposition"
+                  in: "header"
+                  schema:
+                    type: "string"
+              responses:
+                "200":
+                  description: "200 response"
+                  headers:
+                    Content-Disposition:
+                      schema:
+                        type: "string"
+                    Content-Type:
+                      schema:
+                        type: "string"
+                  content:
+                    application/json:
+                      schema:
+                        $ref: "#/components/schemas/Empty"
+              x-amazon-apigateway-integration:
+                type: "aws"
+                credentials:
+                  Fn::GetAtt: [APIGatewayS3AccessRole, Arn]
+                uri:
+                  Fn::Join:
+                    - ""
+                    - - "arn:aws:apigateway:us-east-1:s3:path/"
+                      - Ref: StaticSiteBucket
+                      - "/{item}"
+                httpMethod: "GET"
+                responses:
+                  "200":
+                    statusCode: "200"
+                    responseParameters:
+                      method.response.header.Content-Disposition: "integration.response.header.Content-Disposition"
+                      method.response.header.Content-Type: "integration.response.header.Content-Type"
+                requestParameters:
+                  integration.request.header.Content-Disposition: "method.request.header.Content-Disposition"
+                  integration.request.path.item: "method.request.path.item"
+                  integration.request.header.Content-Type: "method.request.header.Content-Type"
+                passthroughBehavior: "when_no_match"
+            options:
+              responses:
+                "200":
+                  description: "200 response"
+                  headers:
+                    Access-Control-Allow-Origin:
+                      schema:
+                        type: "string"
+                    Access-Control-Allow-Methods:
+                      schema:
+                        type: "string"
+                    Access-Control-Allow-Headers:
+                      schema:
+                        type: "string"
+                  content:
+                    application/json:
+                      schema:
+                        $ref: "#/components/schemas/Empty"
+              x-amazon-apigateway-integration:
+                type: "mock"
+                responses:
+                  default:
+                    statusCode: "200"
+                    responseParameters:
+                      method.response.header.Access-Control-Allow-Methods: "'DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT'"
+                      method.response.header.Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
+                      method.response.header.Access-Control-Allow-Origin: "'*'"
+                requestTemplates:
+                  application/json: '{"statusCode": 200}'
+                passthroughBehavior: "when_no_match"
+        components:
+          schemas:
+            Empty:
+              title: "Empty Schema"
+              type: "object"
+        x-amazon-apigateway-binary-media-types:
+          - "*/*"
+
+  # S3GetMethod:
+  #   Type: AWS::ApiGateway::Method
+  #   Properties:
+  #     ApiKeyRequired: false
+  #     AuthorizationType: NONE
+  #     HttpMethod: GET
+  #     Integration:
+  #       Type: AWS
+  #       Credentials: !GetAtt APIGatewayS3AccessRole.Arn
+  #       IntegrationHttpMethod: GET
+  #       Uri: !Sub "arn:aws:apigateway:${AWS::Region}:s3:path/{bucket}/{object}"
+  #       PassthroughBehavior: "when_no_match"
+  #       RequestParameters:
+  #         "integration.request.path.object": "method.request.path.item"
+  #         "integration.request.path.bucket": "method.request.path.folder"
+  #       IntegrationResponses:
+  #         - StatusCode: "200"
+  #     ResourceId: !GetAtt ApiGatewayRestApi.RootResourceId
+  #     RestApiId: !Ref ApiGatewayRestApi
+  #     MethodResponses:
+  #       - StatusCode: "200"
+
+  # ApiGatewayDeployment:
+  #   Type: "AWS::ApiGateway::Deployment"
+  #   DependsOn:
+  #     - S3GetMethod
+  #   Properties:
+  #     RestApiId: !Ref ApiGatewayRestApi
+  #     StageName: !Ref Stage
+
+  APIGatewayS3AccessRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - apigateway.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Path: "/"
+      Policies:
+        - PolicyName: bucket-read
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - "s3:GetObject"
+                Resource: !Join
+                  - "/"
+                  - - !GetAtt StaticSiteBucket.Arn
+                    - "*"
+
+Outputs:
+  StaticSiteBucketName:
+    Description: "StaticSiteBucket Name"
+    Value: !Sub "${StaticSiteBucket}"
+  ApiEndpoint:
+    Description: "API Gateway endpoint URL for Prod stage for API Gateway Multi-Origin CORS function"
+    Value: !Sub "https://${ApiGatewayRestApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}/"
