@@ -20,6 +20,9 @@ popd
 
 # deploy site
 aws s3 sync my-react-app/build/ s3://aws-api-gateway-to-s3-static-sit-staticsitebucket-2k3gk0lgl72u
+
+# visit site
+open https://a4kesxi0gg.execute-api.us-east-1.amazonaws.com/dev/index.html
 ```
 
 ## screenshots
