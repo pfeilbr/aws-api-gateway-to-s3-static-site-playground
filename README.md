@@ -1,6 +1,7 @@
 # aws-api-gateway-to-s3-static-site-playground
 
 * example of hosting static site (create-react-app) with api gateway -> s3
+    * can also leverage private api gateway endpoint
 * static site content at [`my-react-app`](my-react-app)
 
 ## Example Deployment Steps
