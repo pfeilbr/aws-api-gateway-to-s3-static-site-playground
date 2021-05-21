@@ -24,12 +24,11 @@ aws s3 sync my-react-app/build/ s3://aws-api-gateway-to-s3-static-sit-staticsite
 
 ## screenshots
 
-<img src="https://www.evernote.com/l/AAGTad9n-GJE1YUX1WX9hfouZMDLl7DaKSkB/image.png" alt="" width="50%" />
+<img src="https://www.evernote.com/l/AAGTad9n-GJE1YUX1WX9hfouZMDLl7DaKSkB/image.png" alt="" width="75%" />
 
 ## Resources
 
-* [API-Gateway S3 Proxy](https://jcdubs.medium.com/api-gateway-s3-proxy-a72e398b4d03) - followed this console guide to get it to work.  export as openapi from console and reference in [`template.yaml`](template.yaml)
-
+* [API-Gateway S3 Proxy](https://jcdubs.medium.com/api-gateway-s3-proxy-a72e398b4d03) - followed this console guide to get it to work.  export as openapi from console and embed in [`template.yaml`](template.yaml)
 * [Tutorial: Create a REST API as an Amazon S3 proxy in API Gateway - Amazon API Gateway](https://docs.aws.amazon.com/apigateway/latest/developerguide/integrating-api-with-aws-services-s3.html#api-items-in-folder-as-s3-objects-in-bucket)
 * [API Gateway S3 Integration Signature does not match with blank folder name](https://stackoverflow.com/questions/64539716/api-gateway-s3-integration-signature-does-not-match-with-blank-folder-name)
 * [Functionless S3 Integration inside a Serverless Casserole-Part 1](https://medium.com/lego-engineering/functionless-s3-integration-inside-a-serverless-casserole-part-1-b300085eea78)
