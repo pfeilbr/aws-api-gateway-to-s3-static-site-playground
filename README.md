@@ -1,7 +1,14 @@
 # aws-api-gateway-to-s3-static-site-playground
 
+> WARNING: you probably shouldn't do this / there's a better way
+> just because you can do it doesn't mean you should :)
+> was curious if it could be done
+>
+> `#awswishlist` private s3 bucket websites with TLS support
+
+---
+
 * example of hosting static site (create-react-app) with api gateway -> s3
-    * can also leverage private api gateway endpoint
 * static site content at [`my-react-app`](my-react-app)
 
 ## Example Deployment Steps
